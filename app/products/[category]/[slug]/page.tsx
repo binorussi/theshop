@@ -5,14 +5,20 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
-import { useCart } from '@/app/context/CartContext'; 
-import { getProductBySlug } from '@/lib/api'; // Ensure this points to where MOCK_PRODUCTS is exported
+import { useCart } from '@/app/context/CartContext';
+import { getProductBySlug } from '@/lib/api';
 import { Product, ProductImage } from '@/types/ecommerce';
+
+const formatBirr = (amount: number) =>
+  `${amount.toLocaleString('en-ET', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })} ETB`;
 
 export default function ProductDetailPage() {
   const params = useParams();
   const slug = params?.slug as string;
-  
+
   const { addToCart } = useCart();
 
   const [product, setProduct] = useState<Product | null>(null);
@@ -20,11 +26,12 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState<number>(1);
   const [added, setAdded] = useState<boolean>(false);
 
-  // Fetch product since getProductBySlug returns a Promise
   useEffect(() => {
     let isMounted = true;
+
     if (slug) {
       setLoading(true);
+
       getProductBySlug(slug).then((data) => {
         if (isMounted) {
           setProduct(data);
@@ -32,6 +39,7 @@ export default function ProductDetailPage() {
         }
       });
     }
+
     return () => {
       isMounted = false;
     };
@@ -40,7 +48,9 @@ export default function ProductDetailPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-16 text-center">
-        <p className="text-sm font-medium text-gray-500">Loading product details...</p>
+        <p className="text-sm font-medium text-gray-500">
+          Loading product details...
+        </p>
       </div>
     );
   }
@@ -48,8 +58,14 @@ export default function ProductDetailPage() {
   if (!product) {
     return (
       <div className="mx-auto max-w-7xl px-4 py-16 text-center">
-        <h1 className="text-xl font-bold text-gray-900">Product not found</h1>
-        <Link href="/" className="mt-4 inline-block text-sm text-indigo-600 underline">
+        <h1 className="text-xl font-bold text-gray-900">
+          Product not found
+        </h1>
+
+        <Link
+          href="/"
+          className="mt-4 inline-block text-sm text-indigo-600 underline"
+        >
           Return to catalog
         </Link>
       </div>
@@ -57,108 +73,162 @@ export default function ProductDetailPage() {
   }
 
   const primaryImage =
-    product.images?.find((img: ProductImage) => img.isPrimary) || product.images?.[0];
+    product.images?.find(
+      (img: ProductImage) => img.isPrimary
+    ) || product.images?.[0];
+
+  const lineTotal = product.price * quantity;
 
   const handleAddToCart = () => {
+    /*
+     * Add the selected quantity to the single CartContext.
+     *
+     * This keeps product detail, product cards, header,
+     * and checkout using the same cart.
+     */
     for (let i = 0; i < quantity; i++) {
       addToCart(product);
     }
+
     setAdded(true);
-    setTimeout(() => setAdded(false), 2000);
+
+    setTimeout(() => {
+      setAdded(false);
+    }, 2000);
   };
 
   const CATEGORY_NAMES: Record<string, string> = {
-  pantry: 'Pantry & Confectionery',
-  supplements: 'Health & Supplements',
-  'personal-care': 'Personal Care & Hygiene',
+    pantry: 'Pantry & Confectionery',
+    supplements: 'Health & Supplements',
+    'personal-care': 'Personal Care & Hygiene',
   };
+
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Breadcrumb */}
-      {/* Dynamic Breadcrumb Navigation */}
-<nav className="mb-6 flex items-center space-x-2 text-xs text-gray-500">
-  <Link href="/" className="hover:text-indigo-600 transition">
-    Home
-  </Link>
-  
-  <span>/</span>
-  
-  {/* Dynamic Category Link */}
-  <Link 
-    href={`/search?category=${product.categorySlug}`} 
-    className="hover:text-indigo-600 font-medium text-gray-700 transition"
-  >
-    {CATEGORY_NAMES[product.categorySlug] || product.categorySlug.replace('-', ' ')}
-  </Link>
+      <nav className="mb-6 flex items-center space-x-2 text-xs text-gray-500">
+        <Link
+          href="/"
+          className="transition hover:text-indigo-600"
+        >
+          Home
+        </Link>
 
-  <span>/</span>
-  
-  <span className="font-medium text-gray-900 truncate">
-    {product.name}
-  </span>
-</nav>
+        <span>/</span>
+
+        <Link
+          href={`/search?category=${product.categorySlug}`}
+          className="font-medium text-gray-700 transition hover:text-indigo-600"
+        >
+          {CATEGORY_NAMES[product.categorySlug] ||
+            product.categorySlug.replace('-', ' ')}
+        </Link>
+
+        <span>/</span>
+
+        <span className="truncate font-medium text-gray-900">
+          {product.name}
+        </span>
+      </nav>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {/* Product Image */}
+        {/* PRODUCT IMAGE */}
         <div className="relative aspect-square w-full overflow-hidden rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
           <Image
-            src={primaryImage?.url || '/placeholder.jpg'}
-            alt={primaryImage?.altText || product.name}
+            src={
+              primaryImage?.url ||
+              '/placeholder.jpg'
+            }
+            alt={
+              primaryImage?.altText ||
+              product.name
+            }
             fill
             className="object-contain object-center"
             priority
           />
         </div>
 
-        {/* Product Details */}
+        {/* PRODUCT DETAILS */}
         <div className="flex flex-col justify-between py-2">
           <div>
             <p className="text-xs font-bold uppercase tracking-wider text-indigo-600">
               {product.brand}
             </p>
+
             <h1 className="mt-2 text-2xl font-bold text-gray-900 sm:text-3xl">
               {product.name}
             </h1>
+
+            {/* PRICE */}
             <p className="mt-3 text-2xl font-black text-gray-900">
-              ${product.price ? product.price.toFixed(2) : '0.00'} <span className="text-sm font-normal text-gray-500">USD</span>
+              {formatBirr(product.price)}
             </p>
 
-            <p className="mt-4 text-sm text-gray-600 leading-relaxed">
+            <p className="mt-4 text-sm leading-relaxed text-gray-600">
               {product.description}
             </p>
 
-            {/* Quantity Selector */}
+            {/* QUANTITY */}
             <div className="mt-6 flex items-center space-x-3">
-              <label htmlFor="quantity" className="text-xs font-semibold text-gray-700">
+              <label
+                htmlFor="quantity"
+                className="text-xs font-semibold text-gray-700"
+              >
                 Quantity
               </label>
+
               <select
                 id="quantity"
                 value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
+                onChange={(e) =>
+                  setQuantity(Number(e.target.value))
+                }
                 className="rounded-lg border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-900 focus:border-indigo-500 focus:outline-none"
               >
-                {[1, 2, 3, 4, 5, 6, 8, 10].map((num) => (
-                  <option key={num} value={num}>
-                    {num}
-                  </option>
-                ))}
+                {[1, 2, 3, 4, 5, 6, 8, 10].map(
+                  (num) => (
+                    <option key={num} value={num}>
+                      {num}
+                    </option>
+                  )
+                )}
               </select>
+            </div>
+
+            {/* SELECTED QUANTITY TOTAL */}
+            <div className="mt-4 rounded-lg border border-indigo-100 bg-indigo-50 p-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">
+                  {quantity} × {formatBirr(product.price)}
+                </span>
+
+                <span className="font-bold text-gray-900">
+                  {formatBirr(lineTotal)}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Add To Cart Action Button */}
+          {/* ADD TO CART */}
           <div className="mt-8">
             <button
               onClick={handleAddToCart}
               type="button"
-              className={`w-full rounded-xl py-3.5 text-center text-sm font-semibold text-white shadow transition focus:outline-none cursor-pointer ${
-                added 
-                  ? 'bg-green-600 hover:bg-green-500' 
-                  : 'bg-indigo-600 hover:bg-indigo-500'
+              disabled={!product.inStock}
+              className={`w-full rounded-xl py-3.5 text-center text-sm font-semibold text-white shadow transition focus:outline-none ${
+                !product.inStock
+                  ? 'cursor-not-allowed bg-gray-400'
+                  : added
+                  ? 'bg-green-600 hover:bg-green-500'
+                  : 'cursor-pointer bg-indigo-600 hover:bg-indigo-500'
               }`}
             >
-              {added ? '✓ Added to Cart!' : 'Add to Cart'}
+              {!product.inStock
+                ? 'Out of Stock'
+                : added
+                ? '✓ Added to Cart!'
+                : 'Add to Cart'}
             </button>
           </div>
         </div>
