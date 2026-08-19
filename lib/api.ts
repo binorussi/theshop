@@ -268,7 +268,7 @@ export const MOCK_PRODUCTS: Product[] = [
   },
   {
     id: 'prod-014',
-    slug: 'olay-essential-botanicals-body-wash-3pack',
+    slug: 'olay-essential-botanicals-body-wash',
     gtin: '037000847164',
     name: 'Olay Essential Botanicals Body Wash',
     brand: 'Olay',
@@ -279,7 +279,7 @@ export const MOCK_PRODUCTS: Product[] = [
     currency: 'BIRR',
     images: [
       {
-        url: '/products/olay-3-body-washes.jpg',
+        url: '/products/olay-3-body- washes.jpg',
         altText: 'Olay Essential Botanicals Body Wash 3-Pack',
         isPrimary: true,
       },
