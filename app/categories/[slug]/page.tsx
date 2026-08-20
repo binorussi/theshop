@@ -61,7 +61,7 @@ export default async function CategoryDetailPage({ params }: Props) {
                 <p className="mt-1 text-sm text-gray-600 line-clamp-2">{product.description}</p>
               </div>
               <div className="mt-6 flex items-center justify-between">
-                <span className="text-xl font-bold text-gray-900">${product.price.toFixed(2)}</span>
+                <span className="text-xl font-bold text-gray-900">Br {product.price.toFixed(2)}</span>
                 <Link
                   href={`/products/${product.categorySlug}/${product.slug}`}
                   className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 focus-visible:outline-2 focus-visible:outline-indigo-600"
